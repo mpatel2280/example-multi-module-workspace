@@ -1,0 +1,10 @@
+go 1.24.4
+
+use (
+	./db
+	./example/hello
+	./export_to_excel
+	./export_to_pdf
+	./hello
+	./projects
+)

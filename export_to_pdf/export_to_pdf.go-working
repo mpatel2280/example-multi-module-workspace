@@ -1,0 +1,92 @@
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"example-multi-module-workspace/db"
+	"example-multi-module-workspace/projects"
+
+	"github.com/phpdave11/gofpdf"
+)
+
+// func main() {
+// 	// Connect to MySQL
+// 	database := db.Connect()
+// 	defer database.Close()
+
+// 	// Query data
+// 	rows, err := db.Query("SELECT id, name, tech_stack FROM projects")
+// 	if err != nil {
+// 		log.Fatal("Query error:", err)
+// 	}
+// 	defer rows.Close()
+
+// 	// Prepare PDF
+// 	pdf := gofpdf.New("P", "mm", "A4", "")
+// 	pdf.AddPage()
+// 	pdf.SetFont("Arial", "B", 16)
+// 	pdf.Cell(40, 10, "Project List Report")
+// 	pdf.Ln(12)
+
+// 	// Table headers
+// 	pdf.SetFont("Arial", "B", 12)
+// 	headers := []string{"ID", "Name", "Tech Stack"}
+// 	widths := []float64{20, 60, 80}
+
+// 	for i, h := range headers {
+// 		pdf.CellFormat(widths[i], 10, h, "1", 0, "C", false, 0, "")
+// 	}
+// 	pdf.Ln(-1)
+
+// 	// Table data
+// 	pdf.SetFont("Arial", "", 11)
+// 	for rows.Next() {
+// 		var id int
+// 		var name, techStack string
+// 		rows.Scan(&id, &name, &techStack)
+
+// 		pdf.CellFormat(widths[0], 8, fmt.Sprintf("%d", id), "1", 0, "C", false, 0, "")
+// 		pdf.CellFormat(widths[1], 8, name, "1", 0, "L", false, 0, "")
+// 		pdf.CellFormat(widths[2], 8, techStack, "1", 0, "L", false, 0, "")
+// 		pdf.Ln(-1)
+// 	}
+
+// 	// Save PDF
+// 	err = pdf.OutputFileAndClose("projects_report.pdf")
+// 	if err != nil {
+// 		log.Fatal("Error saving PDF:", err)
+// 	}
+
+// 	fmt.Println("✅ PDF generated successfully: projects_report.pdf")
+// }
+
+func main() {
+	database := db.Connect()
+	defer database.Close()
+
+	// Fetch all projects
+	data, err := projects.GetAll()
+	if err != nil {
+		log.Fatal("Fetch error:", err)
+	}
+
+	// Create PDF
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+	pdf.Cell(40, 10, "Projects Report")
+	pdf.Ln(12)
+
+	pdf.SetFont("Arial", "", 12)
+	for _, p := range data {
+		pdf.Cell(40, 10, fmt.Sprintf("%d - %s (%s)", p.ID, p.Name, p.TechStack))
+		pdf.Ln(8)
+	}
+
+	if err := pdf.OutputFileAndClose("projects_report.pdf"); err != nil {
+		log.Fatal("PDF generation error:", err)
+	}
+
+	fmt.Println("✅ PDF exported successfully!")
+}

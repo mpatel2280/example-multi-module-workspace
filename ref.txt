@@ -1,0 +1,8 @@
+https://go.dev/doc/
+https://go.dev/doc/tutorial/workspaces.html
+https://go.dev/doc/tutorial/workspaces
+https://go.dev/doc/modules/release-workflow
+
+https://go.dev/doc/modules/developing#design
+- Developing and publishing modules
+    
