@@ -44,12 +44,14 @@ Commands:
   migrate              Run all pending migrations
   seed                 Seed the database with sample data
   all                  Run migrations and seed (default)
+  fresh                Drop database and recreate it fresh (with migrations and seed)
   help                 Show this help message
 
 Examples:
   ./run-migrations.sh migrate
   ./run-migrations.sh seed
   ./run-migrations.sh all
+  ./run-migrations.sh fresh
   ./run-migrations.sh help
 
 Environment:
@@ -130,10 +132,51 @@ run_all() {
     print_success "Migrations and seeding completed successfully!"
 }
 
+# Function to drop and recreate database fresh
+run_fresh() {
+    print_warning "This will DROP the entire database and recreate it fresh!"
+    print_warning "All data will be lost!"
+    echo ""
+    read -p "Are you sure? Type 'yes' to confirm: " confirmation
+
+    if [ "$confirmation" != "yes" ]; then
+        print_info "Operation cancelled"
+        return
+    fi
+
+    print_info "Dropping database 'testdb'..."
+
+    # Drop the database
+    mysql -u root -p"root" -h localhost --port 3306 -e "DROP DATABASE IF EXISTS testdb;" 2>/dev/null
+
+    if [ $? -ne 0 ]; then
+        print_error "Failed to drop database. Check MySQL connection."
+        exit 1
+    fi
+
+    print_success "Database dropped"
+
+    print_info "Creating fresh database 'testdb'..."
+
+    # Create the database
+    mysql -u root -p"root" -h localhost --port 3306 -e "CREATE DATABASE IF NOT EXISTS testdb;" 2>/dev/null
+
+    if [ $? -ne 0 ]; then
+        print_error "Failed to create database. Check MySQL connection."
+        exit 1
+    fi
+
+    print_success "Fresh database created"
+    echo ""
+
+    # Now run migrations and seed
+    run_all
+}
+
 # Main script logic
 main() {
     local command="${1:-all}"
-    
+
     case "$command" in
         migrate)
             run_migrations
@@ -143,6 +186,9 @@ main() {
             ;;
         all)
             run_all
+            ;;
+        fresh)
+            run_fresh
             ;;
         help)
             show_usage

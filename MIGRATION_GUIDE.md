@@ -122,8 +122,17 @@ mysql -u root -p testdb < db/migrations/001_create_projects_table.sql
 ./run-migrations.sh migrate        # Run migrations only
 ./run-migrations.sh seed           # Seed database only
 ./run-migrations.sh all            # Run migrations and seed
+./run-migrations.sh fresh          # Drop DB and recreate fresh
 ./run-migrations.sh help           # Show help
 ```
+
+**Fresh Command Details:**
+- Drops the entire database
+- Creates a new database
+- Runs all migrations
+- Seeds with sample data
+- Requires confirmation (type "yes")
+- See `FRESH_DATABASE.md` for details
 
 ### CLI Tool Commands
 
@@ -139,7 +148,7 @@ mysql -u root -p testdb < db/migrations/001_create_projects_table.sql
 Database connection is configured in `db/connect.go`:
 
 ```go
-dsn := "root:root@tcp(localhost:3307)/testdb"
+dsn := "root:root@tcp(localhost:3306)/testdb"
 ```
 
 **To change connection details:**

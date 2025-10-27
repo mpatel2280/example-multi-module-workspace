@@ -46,6 +46,22 @@ db.SeedDatabase()
 mysql -u root -p testdb < db/migrations/001_create_projects_table.sql
 ```
 
+## 🔄 Fresh Database Command
+
+**New!** Use the `fresh` command to drop and recreate the database:
+
+```bash
+./db/run-migrations.sh fresh
+```
+
+This will:
+1. Drop the entire database
+2. Create a fresh database
+3. Run all migrations
+4. Seed with 10 sample projects
+
+⚠️ **Warning:** This deletes all data! See `FRESH_DATABASE.md` for details.
+
 ## 📊 Database Schema
 
 **Projects Table** (analyzed from your code):

@@ -16,6 +16,7 @@ chmod +x run-migrations.sh
 ./run-migrations.sh migrate        # Run migrations only
 ./run-migrations.sh seed           # Seed database only
 ./run-migrations.sh all            # Run both (default)
+./run-migrations.sh fresh          # Drop DB and recreate fresh
 ./run-migrations.sh help           # Show help
 ```
 
