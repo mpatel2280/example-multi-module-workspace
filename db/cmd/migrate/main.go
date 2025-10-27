@@ -42,6 +42,9 @@ func main() {
 	case "fresh":
 		runFresh()
 
+	case "refresh":
+		runReFresh()
+
 	case "help":
 		printUsage()
 
@@ -164,6 +167,37 @@ func runFresh() {
 	// Seed database
 	if err := db.SeedDatabase(); err != nil {
 		log.Fatalf("❌ Seeding failed: %v", err)
+	}
+
+	fmt.Println("✅ Fresh migration completed successfully!")
+	fmt.Println("✅ Database dropped, recreated, and seeded with sample data!")
+}
+
+func runReFresh() {
+	fmt.Println("🔄 Fresh migration: Drop database and recreate with seed data...")
+	fmt.Println("")
+	fmt.Println("⚠️  WARNING: This will DROP the entire database and recreate it fresh!")
+	fmt.Println("⚠️  All data will be lost!")
+	fmt.Println("")
+
+	// Prompt for confirmation
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Are you sure? Type 'yes' to confirm: ")
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(input)
+
+	if input != "yes" {
+		fmt.Println("ℹ️  Operation cancelled")
+		return
+	}
+
+	// Connect to database
+	database := db.Connect()
+	defer database.Close()
+
+	// Run migrations
+	if err := db.RunRefreshMigrations(); err != nil {
+		log.Fatalf("❌ Migration failed: %v", err)
 	}
 
 	fmt.Println("✅ Fresh migration completed successfully!")

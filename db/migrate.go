@@ -12,14 +12,46 @@ import (
 func findMigrationsDir() (string, error) {
 	cwd, _ := os.Getwd()
 
+	const migrationsDir = "migrations"
+
 	possiblePaths := []string{
-		"db/migrations",
-		"./db/migrations",
-		filepath.Join(cwd, "db", "migrations"),
-		filepath.Join(filepath.Dir(os.Args[0]), "migrations"),
-		filepath.Join(filepath.Dir(os.Args[0]), "..", "migrations"),
-		filepath.Join(filepath.Dir(os.Args[0]), "..", "..", "db", "migrations"),
-		filepath.Join(filepath.Dir(os.Args[0]), "..", "..", "..", "db", "migrations"),
+		"db/" + migrationsDir,
+		"./db/" + migrationsDir,
+		filepath.Join(cwd, "db", migrationsDir),
+		filepath.Join(filepath.Dir(os.Args[0]), migrationsDir),
+		filepath.Join(filepath.Dir(os.Args[0]), "..", migrationsDir),
+		filepath.Join(filepath.Dir(os.Args[0]), "..", "..", "db", migrationsDir),
+		filepath.Join(filepath.Dir(os.Args[0]), "..", "..", "..", "db", migrationsDir),
+	}
+
+	for _, path := range possiblePaths {
+		if _, err := os.Stat(path); err == nil {
+			log.Printf("Found migrations directory at: %s", path)
+			return path, nil
+		}
+	}
+
+	// Print debug information
+	log.Printf("Current working directory: %s", cwd)
+	log.Printf("Executable path: %s", os.Args[0])
+	log.Printf("Executable directory: %s", filepath.Dir(os.Args[0]))
+	return "", fmt.Errorf("migrations directory not found in any of the expected locations. Tried: %v", possiblePaths)
+}
+
+// findRefreshMigrationsDir finds the migrations directory by checking multiple possible locations
+func findRefreshMigrationsDir() (string, error) {
+	cwd, _ := os.Getwd()
+
+	const refreshMigrationsDir = "refresh-migrations"
+
+	possiblePaths := []string{
+		"db/" + refreshMigrationsDir,
+		"./db/" + refreshMigrationsDir,
+		filepath.Join(cwd, "db", refreshMigrationsDir),
+		filepath.Join(filepath.Dir(os.Args[0]), refreshMigrationsDir),
+		filepath.Join(filepath.Dir(os.Args[0]), "..", refreshMigrationsDir),
+		filepath.Join(filepath.Dir(os.Args[0]), "..", "..", "db", refreshMigrationsDir),
+		filepath.Join(filepath.Dir(os.Args[0]), "..", "..", "..", "db", refreshMigrationsDir),
 	}
 
 	for _, path := range possiblePaths {
@@ -44,6 +76,60 @@ func RunMigrations() error {
 
 	// Find the migrations directory
 	migrationsDir, err := findMigrationsDir()
+	if err != nil {
+		return err
+	}
+
+	// Read migration files
+	files, err := os.ReadDir(migrationsDir)
+	if err != nil {
+		return fmt.Errorf("failed to read migrations directory: %v", err)
+	}
+
+	// Execute each migration file
+	for _, file := range files {
+		if file.IsDir() || !strings.HasSuffix(file.Name(), ".sql") {
+			continue
+		}
+
+		filePath := filepath.Join(migrationsDir, file.Name())
+		log.Printf("Running migration: %s", file.Name())
+
+		// Read the SQL file
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			return fmt.Errorf("failed to read migration file %s: %v", file.Name(), err)
+		}
+
+		// Execute the SQL statements
+		// Split by semicolon to handle multiple statements
+		statements := strings.Split(string(content), ";")
+		for _, stmt := range statements {
+			stmt = strings.TrimSpace(stmt)
+			if stmt == "" {
+				continue
+			}
+
+			_, err := dbInstance.Exec(stmt)
+			if err != nil {
+				return fmt.Errorf("failed to execute migration %s: %v", file.Name(), err)
+			}
+		}
+
+		log.Printf("✅ Migration completed: %s", file.Name())
+	}
+
+	return nil
+}
+
+// RunMigrations executes all SQL migration files in the migrations directory
+func RunRefreshMigrations() error {
+	if dbInstance == nil {
+		return fmt.Errorf("database not connected — call db.Connect() first")
+	}
+
+	// Find the migrations directory
+	migrationsDir, err := findRefreshMigrationsDir()
 	if err != nil {
 		return err
 	}
