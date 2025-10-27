@@ -13,7 +13,7 @@ var dbInstance *sql.DB
 // Connect returns a reusable MySQL *sql.DB instance
 func Connect() *sql.DB {
 	// Change connection details as needed
-	dsn := "root:root@tcp(localhost:3307)/testdb"
+	dsn := "root:root@tcp(localhost:3306)/testdb"
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
