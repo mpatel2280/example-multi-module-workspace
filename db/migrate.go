@@ -8,32 +8,44 @@ import (
 	"strings"
 )
 
+// findMigrationsDir finds the migrations directory by checking multiple possible locations
+func findMigrationsDir() (string, error) {
+	cwd, _ := os.Getwd()
+
+	possiblePaths := []string{
+		"db/migrations",
+		"./db/migrations",
+		filepath.Join(cwd, "db", "migrations"),
+		filepath.Join(filepath.Dir(os.Args[0]), "migrations"),
+		filepath.Join(filepath.Dir(os.Args[0]), "..", "migrations"),
+		filepath.Join(filepath.Dir(os.Args[0]), "..", "..", "db", "migrations"),
+		filepath.Join(filepath.Dir(os.Args[0]), "..", "..", "..", "db", "migrations"),
+	}
+
+	for _, path := range possiblePaths {
+		if _, err := os.Stat(path); err == nil {
+			log.Printf("Found migrations directory at: %s", path)
+			return path, nil
+		}
+	}
+
+	// Print debug information
+	log.Printf("Current working directory: %s", cwd)
+	log.Printf("Executable path: %s", os.Args[0])
+	log.Printf("Executable directory: %s", filepath.Dir(os.Args[0]))
+	return "", fmt.Errorf("migrations directory not found in any of the expected locations. Tried: %v", possiblePaths)
+}
+
 // RunMigrations executes all SQL migration files in the migrations directory
 func RunMigrations() error {
 	if dbInstance == nil {
 		return fmt.Errorf("database not connected — call db.Connect() first")
 	}
 
-	// Get the migrations directory path
-	// Try multiple possible locations
-	var migrationsDir string
-	possiblePaths := []string{
-		"db/migrations",
-		"./db/migrations",
-		filepath.Join(filepath.Dir(os.Args[0]), "migrations"),
-		filepath.Join(filepath.Dir(os.Args[0]), "..", "migrations"),
-		filepath.Join(filepath.Dir(os.Args[0]), "..", "..", "db", "migrations"),
-	}
-
-	for _, path := range possiblePaths {
-		if _, err := os.Stat(path); err == nil {
-			migrationsDir = path
-			break
-		}
-	}
-
-	if migrationsDir == "" {
-		return fmt.Errorf("migrations directory not found in any of the expected locations")
+	// Find the migrations directory
+	migrationsDir, err := findMigrationsDir()
+	if err != nil {
+		return err
 	}
 
 	// Read migration files
