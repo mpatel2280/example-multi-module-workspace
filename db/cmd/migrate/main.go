@@ -216,6 +216,7 @@ Commands:
   seed                 Seed the database with sample data
   migrate-and-seed     Run migrations and seed in one command
   fresh                Drop database and recreate it fresh with seed data
+  refresh              Drop database and recreate it fresh with seed data (Using Single SQL Script file)
   help                 Show this help message
 
 Examples:
@@ -223,6 +224,8 @@ Examples:
   migrate seed
   migrate migrate-and-seed
   migrate fresh
+  migrate refresh
+  migrate help
 
 Environment Variables:
   Database connection is configured in db/connect.go
