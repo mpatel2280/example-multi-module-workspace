@@ -205,8 +205,7 @@ func runReFresh() {
 }
 
 func printUsage() {
-	fmt.Println(`
-Database Migration Tool
+	fmt.Println(`Database Migration Tool
 
 Usage:
   migrate <command> [options]
@@ -233,6 +232,5 @@ Environment Variables:
 
 Note:
   The 'fresh' command will DROP the entire database and recreate it.
-  Use with caution! You will be prompted for confirmation.
-`)
+  Use with caution! You will be prompted for confirmation.`)
 }
