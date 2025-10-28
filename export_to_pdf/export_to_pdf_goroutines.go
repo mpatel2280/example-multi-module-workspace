@@ -26,11 +26,45 @@ func ExportToPDF(filename string, title string, data interface{}) error {
 
 	pdf.SetFont("Arial", "", 12)
 
+	// Calculate column widths based on field names and values
+	var columnWidths []float64
+	if v.Len() > 0 {
+		elemType := v.Index(0).Type()
+		columnWidths = make([]float64, elemType.NumField())
+
+		// Initialize with header widths
+		for i := 0; i < elemType.NumField(); i++ {
+			columnWidths[i] = float64(len(elemType.Field(i).Name)) * 2.5
+		}
+
+		// Update with max value widths
+		for i := 0; i < v.Len(); i++ {
+			elem := v.Index(i)
+			for j := 0; j < elem.NumField(); j++ {
+				val := fmt.Sprintf("%v", elem.Field(j).Interface())
+				valWidth := float64(len(val)) * 2.5
+				if valWidth > columnWidths[j] {
+					columnWidths[j] = valWidth
+				}
+			}
+		}
+
+		// Add minimum width and ensure reasonable max width
+		for i := range columnWidths {
+			if columnWidths[i] < 20 {
+				columnWidths[i] = 20
+			}
+			if columnWidths[i] > 60 {
+				columnWidths[i] = 60
+			}
+		}
+	}
+
 	// Headers
 	if v.Len() > 0 {
 		elemType := v.Index(0).Type()
 		for i := 0; i < elemType.NumField(); i++ {
-			pdf.CellFormat(40, 10, elemType.Field(i).Name, "1", 0, "", false, 0, "")
+			pdf.CellFormat(columnWidths[i], 10, elemType.Field(i).Name, "1", 0, "", false, 0, "")
 		}
 		pdf.Ln(10)
 	}
@@ -40,7 +74,7 @@ func ExportToPDF(filename string, title string, data interface{}) error {
 		elem := v.Index(i)
 		for j := 0; j < elem.NumField(); j++ {
 			val := fmt.Sprintf("%v", elem.Field(j).Interface())
-			pdf.CellFormat(40, 10, val, "1", 0, "", false, 0, "")
+			pdf.CellFormat(columnWidths[j], 10, val, "1", 0, "", false, 0, "")
 		}
 		pdf.Ln(10)
 	}
